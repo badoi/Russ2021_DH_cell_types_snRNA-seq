@@ -1,0 +1,1 @@
+rclone sync --dry-run -P -i /home/bnphan/projects/2022_DH_Russ_cell_types pfenninglab_gdrive:Data/2022_DH_Russ_cell_types
