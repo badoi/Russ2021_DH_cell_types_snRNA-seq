@@ -29,14 +29,18 @@ options(future.globals.maxSize = 150 * 1024^3)
 
 ########################################################
 ## 1) load the object with the dorsal horn neuron clusters
-obj_neuron = LoadH5Seurat(here('data/tidy_data/rdas/Russ_et_al_dorsal_horn_neurons_countsplit.h5seurat'), 
-                          assay = 'countsplit')
+obj_neuron = here('data/tidy_data/rdas/Russ_et_al_dorsal_horn_neurons_countsplit.h5seurat') %>% 
+  LoadH5Seurat(assay = 'countsplit')
+
+keep_dataset = c('Haring', 'Zeisel', 'Sathyamurthy') ## adolescent and adult sets
+obj_neuron = obj_neuron[, obj_neuron$dataset %in% keep_dataset]
+
 sce_neuron = as.SingleCellExperiment(obj_neuron)
 clusters = unique(sce_neuron$final_cluster_assignment) %>% sort()
 alpha = 0.05
 
 ## choose the pairwise comparisions to do the DEG tests
-cluster_grpr = paste0('Excit.', c(12:17))
+cluster_grpr = paste0('Excit.', c(12:16)) ## which clusters are Grpr+
 cluster_exclude = clusters[! clusters %in% cluster_grpr]
 clusters = unique(sce_neuron$final_cluster_assignment) %>% sort()
 pairwise = expand.grid(clusters,clusters) %>% filter(Var1 != Var2) %>% 
@@ -103,6 +107,6 @@ grpr.markers.df$meta_score
 table(grpr.markers.df$final_cluster_assignment)
 
 table_fn = here(DATADIR, 'Russ_et_al_dorsal_horn_Grpr+_subcluster_markerGenes.xlsx')
-grpr.markers.df %>% split(f = .$final_cluster_assignment) %>% writexl::write_xlsx(table_fn)
+grpr.markers.df %>% writexl::write_xlsx(table_fn)
 grpr.markers.df %>% saveRDS(here('data/tidy_data/rdas', 
                                  'Russ_et_al_dorsal_horn_Grpr+_subcluster_markerGenes.rds'))
