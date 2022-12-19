@@ -16,12 +16,15 @@ PLOTDIR='figures/exploratory'
 dir.create(here(PLOTDIR, 'plots'), showWarnings = F)
 
 ## load the object with the dorsal horn neuron clusters
-obj_neuron = LoadH5Seurat(here('data/tidy_data/rdas/Russ_et_al_dorsal_horn_neurons.h5seurat'))
+obj_neuron = LoadH5Seurat(here('data/tidy_data/rdas/Russ_et_al_dorsal_horn_neurons.h5seurat'), 
+                          assay = 'RNA')
+
 cols = paletteDiscrete(values = unique(obj_neuron$family))
 cols2 = paletteDiscrete(values = unique(obj_neuron$final_cluster_assignment))
 
-cluster_grpr = paste0('Excit.', c(12:17))
-
+cluster_grpr = paste0('Excit.', c(12:16))
+keep_dataset = c('Haring', 'Zeisel', 'Sathyamurthy')
+obj_neuron = obj_neuron[, obj_neuron$dataset %in% keep_dataset]
 obj_exc = obj_neuron[, obj_neuron$coarse_cell_types == 'Excit']
 obj_inh = obj_neuron[, obj_neuron$coarse_cell_types == 'Inhib']
 obj_grpr = obj_exc[, obj_exc$final_cluster_assignment %in% cluster_grpr]
@@ -36,12 +39,14 @@ features = grpr.markers.df %>% group_by(final_cluster_assignment) %>%
   arrange(final_cluster_assignment) %>% pull(gene) %>% unique()
 
 p1 = DotPlot(obj_exc, features = features, assay = "RNA", col.min = 0,
-             group.by = 'final_cluster_assignment', scale = T, scale.by = 'radius') + RotatedAxis() + 
+             group.by = 'final_cluster_assignment', scale = T, scale.by = 'radius') + 
+  RotatedAxis()  + xlab('Gene') + 
   theme(legend.position = 'none', axis.text.x = element_blank(),
         axis.ticks.x=element_blank()) + scale_y_discrete(limits = rev) + 
   ylab('Excitatory cluster')
 p2 = DotPlot(obj_inh, features = features, assay = "RNA", col.min = 0,
-             group.by = 'final_cluster_assignment', scale = T, scale.by = 'radius') + RotatedAxis()+ 
+             group.by = 'final_cluster_assignment', scale = T, scale.by = 'radius') + 
+  RotatedAxis()+ 
   theme(legend.position = 'bottom') + scale_y_discrete(limits = rev) +
   ylab('Inhibitory cluster') + xlab('Gene') +
   guides(color = guide_colourbar(title.position="top", 'Average Expression'),
@@ -58,9 +63,10 @@ dev.off()
 ###############################################################
 ## 2) plot the marker gene expression across Grpr+ sub clusters
 p3 = DotPlot(obj_grpr, features = features, assay = "RNA", col.min = 0,
-             group.by = 'final_cluster_assignment', scale = T, scale.by = 'radius') + RotatedAxis()+ 
-  theme(legend.position = 'right') + scale_y_discrete(limits = rev) +
-  ylab('Grpr sub-cluster') + xlab('Gene')
+             group.by = 'final_cluster_assignment', scale = T, scale.by = 'radius') +
+  RotatedAxis()+ 
+  theme(legend.position = 'top') + scale_y_discrete(limits = rev) +
+  ylab('Grpr+ neuron subcluster') + xlab('Gene')
 
 ## put the 2 dot plots aligned vertically
 pdf(here(PLOTDIR, 'plots', 'dotPlot_dh_grpr_subcluster_markers.grpr_subset.pdf'), width = 8, height =4)
